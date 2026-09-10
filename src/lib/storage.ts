@@ -1,5 +1,5 @@
 import type { MediaEntry, ListType } from '../types'
-import * as api from './api'
+import * as api from './backend'
 
 const BACKLOG_KEY = 'media-logbook-backlog'
 const FUTURELOG_KEY = 'media-logbook-futurelog'

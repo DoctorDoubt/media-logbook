@@ -1,6 +1,6 @@
 {
-  "name": "Jeff Log",
-  "short_name": "Jeff Log",
+  "name": "MediaLog",
+  "short_name": "MediaLog",
   "description": "Personal media log for movies, TV, games, and books",
   "start_url": "/",
   "display": "standalone",

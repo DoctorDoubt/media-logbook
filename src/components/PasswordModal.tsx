@@ -46,7 +46,7 @@ export function PasswordModal({ onUnlock }: PasswordModalProps) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg">
       <div className="max-w-md w-full mx-4 p-8 border border-border bg-panel shadow-lg">
         <h1 className="text-2xl font-bold text-text mb-2 text-center">🔒 Locked</h1>
-        <p className="text-muted text-sm text-center mb-6">Enter password to access Jeff Log</p>
+        <p className="text-muted text-sm text-center mb-6">Enter password to access MediaLog</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

@@ -9,6 +9,7 @@ import { AnsiArt } from './components/AnsiArt'
 import { useMediaEntries } from './hooks/useMediaEntries'
 import { promoteMaturedFuturelogEntries } from './lib/storage'
 import { authFetch } from './lib/api'
+import { requiresAuth } from './lib/backend'
 import type { MediaEntry, ListType } from './types'
 
 const UNLOCKED_KEY = 'jefflog-unlocked'
@@ -95,6 +96,34 @@ function Logo() {
       [1,1,2,2],
       [1,1,1,1],
     ],
+    m: [
+      [1,1,1,1,1],
+      [2,0,2,0,2],
+      [1,0,1,0,1],
+      [2,0,2,0,2],
+      [1,0,1,0,1],
+    ],
+    d: [
+      [1,1,1,0],
+      [2,0,0,2],
+      [1,0,0,1],
+      [2,0,0,2],
+      [1,1,1,0],
+    ],
+    i: [
+      [1,1],
+      [2,2],
+      [1,1],
+      [2,2],
+      [1,1],
+    ],
+    a: [
+      [1,1,1,1],
+      [2,0,0,2],
+      [1,1,1,1],
+      [2,0,0,2],
+      [1,0,0,1],
+    ],
     e: [
       [1,1,1,1],
       [2,2,0,0],
@@ -133,7 +162,7 @@ function Logo() {
   }
 
   const color = { top: 'var(--logo-top)', bottom: 'var(--logo-bottom)' }
-  const word = 'jefflog'
+  const word = 'medialog'
 
   return (
     <div className="flex flex-col items-center select-none">
@@ -270,6 +299,10 @@ function App() {
   }
   const [coverDisplayMode, setCoverDisplayMode] = useState<CoverMode>('ascii')
   const [isUnlocked, setIsUnlocked] = useState(() => {
+    // Local backends have no server to authenticate against, so there is
+    // nothing to unlock — the password gate only applies in cloud mode.
+    if (!requiresAuth()) return true
+
     // Check if user has a valid auth token (new method) or legacy unlocked flag
     const hasAuthToken = !!sessionStorage.getItem(AUTH_TOKEN_KEY)
     const wasUnlocked = sessionStorage.getItem(UNLOCKED_KEY) === 'true'

@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Jeff Log",
+  "productName": "MediaLog",
   "version": "0.1.0",
   "identifier": "com.jeff.jefflog",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Jeff Log",
+        "title": "MediaLog",
         "width": 1200,
         "height": 800,
         "resizable": true,

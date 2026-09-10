@@ -1,4 +1,5 @@
 import type { ListType } from '../types'
+import { getStorageMode } from './backend'
 
 const SYNC_STATE_KEY = 'media-logbook-sync-state'
 const AUTH_TOKEN_KEY = 'jefflog-auth-token'
@@ -56,6 +57,13 @@ async function authenticatedFetch(url: string): Promise<Response> {
 }
 
 export async function performSync(listType: ListType): Promise<SyncResult> {
+  // Local backends are the source of truth and have no server to reconcile
+  // against. Calling /api here would 404, and a 401 would bounce the user
+  // through a reload into a password screen that local mode does not use.
+  if (getStorageMode() !== 'cloud') {
+    return { entries: [], serverTime: new Date().toISOString(), isNewData: false, isInitial: false }
+  }
+
   const state = getSyncState()
   const since = state.lastSyncTime || ''
 
