@@ -69,6 +69,21 @@ export async function migrateDatabase() {
 
     console.log('- refresh_tokens table created')
 
+    // Create rate_limits table (backs login throttling in api/lib/rate-limit.ts)
+    await sql`
+      CREATE TABLE IF NOT EXISTS rate_limits (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        identifier TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_rate_limits_identifier_created
+        ON rate_limits(identifier, created_at)
+    `
+
+    console.log('- rate_limits table created')
+
     // Add revoked_at column to refresh_tokens if it doesn't exist (for backward compatibility)
     await sql`
       DO $$

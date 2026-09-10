@@ -8,6 +8,7 @@ import { SyncIndicator } from './components/SyncIndicator'
 import { AnsiArt } from './components/AnsiArt'
 import { useMediaEntries } from './hooks/useMediaEntries'
 import { promoteMaturedFuturelogEntries } from './lib/storage'
+import { authFetch } from './lib/api'
 import type { MediaEntry, ListType } from './types'
 
 const UNLOCKED_KEY = 'jefflog-unlocked'
@@ -381,7 +382,7 @@ function App() {
     setFetchingCovers(true)
     setCoverFetchEmpty(false)
     try {
-      const res = await fetch(`/api/cover?title=${encodeURIComponent(entry.title)}&type=${entry.type}`)
+      const res = await authFetch(`/api/cover?title=${encodeURIComponent(entry.title)}&type=${entry.type}`)
       const data = await res.json()
       const urls: string[] = data.urls ?? []
       setCoverOptions(urls)

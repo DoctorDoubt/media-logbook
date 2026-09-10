@@ -24,15 +24,10 @@ export async function checkRateLimit(
   windowMinutes: number = 15
 ): Promise<RateLimitResult> {
   try {
-    // Create rate_limits table if it doesn't exist (lightweight schema)
-    await sql`
-      CREATE TABLE IF NOT EXISTS rate_limits (
-        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-        identifier TEXT NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-      );
-      CREATE INDEX IF NOT EXISTS idx_rate_limits_identifier_created ON rate_limits(identifier, created_at);
-    `
+    // The rate_limits table is created by migrate-db.ts. It is deliberately not
+    // created here: Neon's HTTP driver rejects multi-statement queries, so the
+    // combined CREATE TABLE + CREATE INDEX that used to live here always threw
+    // and sent every call down the fail-open path below.
 
     // Clean old entries outside the window
     const windowStart = new Date()

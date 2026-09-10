@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { authFetch } from '../lib/api'
 
 // Characters ordered dark → light (suits dark background)
 const ASCII_RAMP = ' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'
@@ -36,8 +37,11 @@ export function AnsiArt({ src, mode = 'ansi', maxWidth = 36, maxHeight = 28, for
     setAsciiRows([])
 
     const img = new Image()
-    // Load via same-origin proxy to avoid all CORS/cache issues
-    const proxiedSrc = `/api/cover?proxy=${encodeURIComponent(src)}`
+    // Load via same-origin proxy to avoid all CORS/cache issues. The proxy
+    // requires a bearer token, which an <img src> cannot carry, so fetch the
+    // bytes with authFetch and hand the image an object URL instead.
+    let objectUrl: string | null = null
+    let cancelled = false
 
     img.onload = () => {
       const canvas = canvasRef.current
@@ -135,7 +139,22 @@ export function AnsiArt({ src, mode = 'ansi', maxWidth = 36, maxHeight = 28, for
     }
 
     img.onerror = () => setLoading(false)
-    img.src = proxiedSrc
+
+    authFetch(`/api/cover?proxy=${encodeURIComponent(src)}`)
+      .then(res => (res.ok ? res.blob() : Promise.reject(new Error(String(res.status)))))
+      .then(blob => {
+        if (cancelled) return
+        objectUrl = URL.createObjectURL(blob)
+        img.src = objectUrl
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
   }, [src, mode, maxWidth, maxHeight, forceAspect])
 
   const isEmpty = mode === 'ansi' ? ansiRows.length === 0 : asciiRows.length === 0

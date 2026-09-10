@@ -1,18 +1,39 @@
+import { requireAuth, AuthError } from './lib/auth.js'
+
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w200'
 
 const ALLOWED_PROXY_HOSTS = ['image.tmdb.org', 'media.rawg.io', 'covers.openlibrary.org', 'images.igdb.com']
+
+// Cap on proxied image size, so an upstream host cannot exhaust function memory.
+const MAX_PROXY_BYTES = 10 * 1024 * 1024
 
 async function proxyImage(imageUrl: string): Promise<Response> {
   let parsed: URL
   try { parsed = new URL(imageUrl) } catch {
     return new Response('Invalid url', { status: 400 })
   }
+  if (parsed.protocol !== 'https:') {
+    return new Response('Disallowed protocol', { status: 403 })
+  }
   if (!ALLOWED_PROXY_HOSTS.some(h => parsed.hostname === h)) {
     return new Response('Disallowed host', { status: 403 })
   }
-  const res = await fetch(imageUrl)
+  // redirect: 'manual' keeps the allowlist meaningful — following redirects
+  // would let an allowed host bounce us to an arbitrary destination.
+  const res = await fetch(imageUrl, { redirect: 'manual' })
+  if (res.status >= 300 && res.status < 400) {
+    return new Response('Upstream redirect refused', { status: 502 })
+  }
   if (!res.ok) return new Response('Upstream error', { status: 502 })
+
+  const declaredLength = Number(res.headers.get('Content-Length') ?? '0')
+  if (declaredLength > MAX_PROXY_BYTES) {
+    return new Response('Upstream image too large', { status: 502 })
+  }
   const buffer = await res.arrayBuffer()
+  if (buffer.byteLength > MAX_PROXY_BYTES) {
+    return new Response('Upstream image too large', { status: 502 })
+  }
   return new Response(buffer, {
     headers: {
       'Content-Type': res.headers.get('Content-Type') ?? 'image/jpeg',
@@ -84,7 +105,9 @@ async function fetchGameCovers(title: string): Promise<string[]> {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'text/plain',
     },
-    body: `search "${title}"; fields name,cover.image_id; where cover != null; limit 5;`,
+    // Escape backslashes and quotes so a title cannot break out of the
+    // quoted string and append its own APICalypse clauses.
+    body: `search "${title.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"; fields name,cover.image_id; where cover != null; limit 5;`,
   })
   const data = await res.json() as any
   return (data ?? [])
@@ -103,6 +126,20 @@ async function fetchComicCovers(title: string): Promise<string[]> {
 }
 
 export async function GET(request: Request) {
+  // Both modes call out to paid third-party APIs or relay bytes on our
+  // bandwidth, so they require a valid session like every other endpoint.
+  try {
+    await requireAuth(request)
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+    throw error
+  }
+
   const url = new URL(request.url)
 
   // Image proxy mode — used by AnsiArt to avoid CORS issues

@@ -5,6 +5,11 @@
 
 import { generateAccessToken } from './lib/auth.js'
 import { getSingleUserId } from './lib/single-user.js'
+import { checkRateLimit, getClientIP } from './lib/rate-limit.js'
+
+// Login attempts allowed per IP per window.
+const MAX_LOGIN_ATTEMPTS = 10
+const LOGIN_WINDOW_MINUTES = 15
 
 const correctPassword = process.env.SITE_PASSWORD
 
@@ -17,47 +22,34 @@ export async function POST(request: Request) {
     const body = await request.json() as { password?: string }
     const { password } = body
 
-    // Rate limiting: 20 attempts per minute per IP
-    const clientIP = request.headers.get('x-forwarded-for') || 'unknown'
-    const rateLimitKey = `password-check:${clientIP}`
+    // Rate limiting is backed by the database rather than process memory:
+    // each serverless instance has its own heap, so an in-memory counter
+    // resets on every cold start and never sees attempts handled by a
+    // sibling instance — which made the previous limiter close to a no-op.
+    const rateLimitKey = `password-check:${getClientIP(request)}`
+    const limit = await checkRateLimit(rateLimitKey, MAX_LOGIN_ATTEMPTS, LOGIN_WINDOW_MINUTES)
 
-    // Simple in-memory rate limiting (works within serverless function instance)
-    if (!(global as any)._passwordAttempts) {
-      (global as any)._passwordAttempts = new Map()
-    }
-    const attempts = (global as any)._passwordAttempts
-    const now = Date.now()
-    const userAttempts = attempts.get(rateLimitKey) || { count: 0, resetTime: now + 60000 }
-
-    if (now > userAttempts.resetTime) {
-      userAttempts.count = 0
-      userAttempts.resetTime = now + 60000
-    }
-
-    if (userAttempts.count >= 20) {
+    if (!limit.allowed) {
+      const retryAfter = limit.resetAt
+        ? Math.max(1, Math.ceil((limit.resetAt.getTime() - Date.now()) / 1000))
+        : LOGIN_WINDOW_MINUTES * 60
       return new Response(
         JSON.stringify({
           error: 'Too many attempts. Please try again later.',
-          resetAt: userAttempts.resetTime
+          resetAt: limit.resetAt
         }),
         {
           status: 429,
           headers: {
             'Content-Type': 'application/json',
-            'Retry-After': '60'
+            'Retry-After': String(retryAfter)
           }
         }
       )
     }
 
-    userAttempts.count++
-    attempts.set(rateLimitKey, userAttempts)
-
     // Check password
     if (password === correctPassword) {
-      // Reset attempts on success
-      attempts.delete(rateLimitKey)
-
       // Get user ID and generate JWT token
       const userId = await getSingleUserId()
       const token = await generateAccessToken({

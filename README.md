@@ -66,8 +66,10 @@ npm run build       # Tauri production bundle
 ## Deployment
 
 Deployed on Vercel. `vercel.json` builds the frontend to `dist/` and serves `api/` as functions.
-Set `DATABASE_URL`, `SITE_PASSWORD`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EXPIRES_IN`, and
-`JWT_REFRESH_EXPIRES_IN` in the project's environment variables.
+Set every variable from `.env.example` in the project's environment variables. `DATABASE_URL`,
+`JWT_SECRET`, and `JWT_REFRESH_SECRET` are required — the functions throw on boot without them.
+The cover-art keys (`TMDB_API_KEY`, `IGDB_CLIENT_ID`, `IGDB_CLIENT_SECRET`) are optional; each
+provider simply returns no covers when unconfigured.
 
 ## Security notes
 

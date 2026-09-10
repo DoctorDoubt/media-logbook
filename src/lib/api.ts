@@ -16,7 +16,14 @@ export interface CreateEntryResponse {
 /**
  * Fetch wrapper with JWT authentication
  * Adds Authorization header with token from sessionStorage
+ *
+ * Exported as `authFetch` for callers outside this module (cover lookup,
+ * ANSI art proxy) so that every request to /api carries the bearer token.
  */
+export async function authFetch(url: string, options?: RequestInit): Promise<Response> {
+  return fetchWrapper(url, options)
+}
+
 async function fetchWrapper(url: string, options?: RequestInit): Promise<Response> {
   const token = sessionStorage.getItem(AUTH_TOKEN_KEY)
 
