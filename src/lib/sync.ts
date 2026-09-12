@@ -1,8 +1,10 @@
 import type { ListType } from '../types'
 import { getStorageMode } from './backend'
+import { storageKey } from '../config'
 
-const SYNC_STATE_KEY = 'media-logbook-sync-state'
-const AUTH_TOKEN_KEY = 'jefflog-auth-token'
+const SYNC_STATE_KEY = storageKey('sync-state')
+const AUTH_TOKEN_KEY = storageKey('auth-token')
+const UNLOCKED_KEY = storageKey('unlocked')
 
 export interface SyncState {
   lastSyncTime: string | null
@@ -49,7 +51,7 @@ async function authenticatedFetch(url: string): Promise<Response> {
   // Don't reload if we never had a token (user not logged in yet)
   if (response.status === 401 && token) {
     sessionStorage.removeItem(AUTH_TOKEN_KEY)
-    sessionStorage.removeItem('jefflog-unlocked')
+    sessionStorage.removeItem(UNLOCKED_KEY)
     window.location.reload() // Force reload to show password screen
   }
 

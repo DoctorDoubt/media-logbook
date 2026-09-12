@@ -1,5 +1,6 @@
 import type { MediaEntry, ListType } from '../types'
 import * as cloud from './api'
+import { storageKey, STORAGE_PREFIX } from '../config'
 
 /**
  * Storage backends.
@@ -16,8 +17,8 @@ import * as cloud from './api'
  */
 export type StorageMode = 'cloud' | 'desktop' | 'browser'
 
-const MODE_KEY = 'jefflog-storage-mode'
-const BROWSER_STORE_PREFIX = 'jefflog-browser-entries-'
+const MODE_KEY = storageKey('storage-mode')
+const BROWSER_STORE_PREFIX = `${STORAGE_PREFIX}-browser-entries-`
 
 export interface BackendResult<T> {
   data?: T

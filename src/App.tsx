@@ -10,10 +10,12 @@ import { useMediaEntries } from './hooks/useMediaEntries'
 import { promoteMaturedFuturelogEntries } from './lib/storage'
 import { authFetch } from './lib/api'
 import { requiresAuth } from './lib/backend'
+import { storageKey } from './config'
 import type { MediaEntry, ListType } from './types'
 
-const UNLOCKED_KEY = 'jefflog-unlocked'
-const AUTH_TOKEN_KEY = 'jefflog-auth-token'
+const UNLOCKED_KEY = storageKey('unlocked')
+const AUTH_TOKEN_KEY = storageKey('auth-token')
+const THEME_KEY = storageKey('theme')
 
 
 function AnimatedBackground({ isDayTheme }: { isDayTheme: boolean }) {
@@ -283,7 +285,7 @@ function App() {
   const [fetchingCovers, setFetchingCovers] = useState(false)
   const [coverFetchEmpty, setCoverFetchEmpty] = useState(false)
   type CoverMode = 'ascii' | 'ansi' | 'original'
-  const COVER_MODES_KEY = 'jefflog-cover-modes'
+  const COVER_MODES_KEY = storageKey('cover-modes')
   const getCoverMode = (id: string): CoverMode => {
     try {
       const map = JSON.parse(localStorage.getItem(COVER_MODES_KEY) ?? '{}')
@@ -315,7 +317,7 @@ function App() {
     return hasAuthToken || wasUnlocked
   })
   const [isDayTheme, setIsDayTheme] = useState(() => {
-    return localStorage.getItem('jefflog-theme') === 'day'
+    return localStorage.getItem(THEME_KEY) === 'day'
   })
 
   useEffect(() => {
@@ -328,7 +330,7 @@ function App() {
     } else {
       document.documentElement.classList.remove('day')
     }
-    localStorage.setItem('jefflog-theme', isDayTheme ? 'day' : 'night')
+    localStorage.setItem(THEME_KEY, isDayTheme ? 'day' : 'night')
   }, [isDayTheme])
 
   const toggleTheme = () => setIsDayTheme((prev) => !prev)

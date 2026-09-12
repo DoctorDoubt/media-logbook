@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { promoteMaturedFuturelogEntries, loadEntries, saveEntries } from './storage'
+import { storageKey } from '../config'
 import type { MediaEntry } from '../types'
 
 // Provide a working localStorage mock
@@ -10,9 +11,15 @@ vi.stubGlobal('localStorage', {
   removeItem: (key: string) => { delete store[key] },
 })
 
-// Mock the api module so no real HTTP calls are made
-vi.mock('./api', () => ({
-  fetchEntries: vi.fn().mockResolvedValue({ entries: [] }),
+// storage.ts talks to ./backend, not ./api — mocking ./api leaves the real
+// backend in place, which would overwrite seeded entries with an empty remote
+// result before promotion ever runs.
+//
+// fetchEntries reports an error so syncEntriesFromCloud falls back to
+// loadEntries(), i.e. these exercise promotion against local data with no
+// backend reachable. That is the behaviour under test.
+vi.mock('./backend', () => ({
+  fetchEntries: vi.fn().mockResolvedValue({ entries: [], error: 'offline in tests' }),
   updateEntry: vi.fn().mockResolvedValue({ entry: {} }),
   createEntry: vi.fn(),
   deleteEntry: vi.fn(),
@@ -41,8 +48,8 @@ function makeEntry(overrides: Partial<MediaEntry> = {}): MediaEntry {
 }
 
 beforeEach(() => {
-  delete store['media-logbook-backlog']
-  delete store['media-logbook-futurelog']
+  delete store[storageKey('backlog')]
+  delete store[storageKey('futurelog')]
 })
 
 describe('promoteMaturedFuturelogEntries', () => {

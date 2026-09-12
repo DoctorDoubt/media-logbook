@@ -9,6 +9,7 @@ import {
   isDesktop,
   type StorageMode,
 } from '../lib/backend'
+import { APP_NAME } from '../config'
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -56,7 +57,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `jefflog-${new Date().toISOString().slice(0, 10)}.json`
+      a.download = `${APP_NAME.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`
       a.click()
       URL.revokeObjectURL(url)
       setBusy(null)

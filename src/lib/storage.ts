@@ -1,11 +1,12 @@
 import type { MediaEntry, ListType } from '../types'
 import * as api from './backend'
+import { storageKey } from '../config'
 
-const BACKLOG_KEY = 'media-logbook-backlog'
-const FUTURELOG_KEY = 'media-logbook-futurelog'
-const OLD_STORAGE_KEY = 'media-logbook-entries'
-const USER_KEY = 'media-logbook-user'
-const MIGRATED_KEY = 'media-logbook-migrated'
+const BACKLOG_KEY = storageKey('backlog')
+const FUTURELOG_KEY = storageKey('futurelog')
+const OLD_STORAGE_KEY = storageKey('entries')
+const USER_KEY = storageKey('user')
+const MIGRATED_KEY = storageKey('migrated')
 
 // Generate or retrieve a local user ID (for backward compatibility)
 export const getLocalUserId = (): string => {

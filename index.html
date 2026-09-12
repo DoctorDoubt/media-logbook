@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
     <script>
-      if (localStorage.getItem('jefflog-theme') === 'day') {
+      // Runs before the bundle, so it cannot use src/config.ts. If you change
+      // STORAGE_PREFIX there, change 'medialog' here too.
+      if (localStorage.getItem('medialog-theme') === 'day') {
         document.documentElement.classList.add('day');
       }
     </script>
