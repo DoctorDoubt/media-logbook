@@ -7,6 +7,8 @@ import {
   exportAll,
   importAll,
   isDesktop,
+  getTmdbKey,
+  setTmdbKey,
   type StorageMode,
 } from '../lib/backend'
 import { APP_NAME } from '../config'
@@ -18,11 +20,11 @@ interface SettingsModalProps {
 
 const MODE_LABELS: Record<StorageMode, { name: string; blurb: string }> = {
   cloud: {
-    name: 'CLOUD',
-    blurb: 'Stored in the hosted database. Syncs across devices, needs the site password and a network connection.',
+    name: 'SERVER',
+    blurb: 'Stored in the database your server talks to. Syncs across devices, needs the site password and a connection.',
   },
   desktop: {
-    name: 'THIS MAC',
+    name: 'THIS DEVICE',
     blurb: 'Stored in a SQLite file inside the app. No network, no password. Data stays on this machine.',
   },
   browser: {
@@ -33,6 +35,7 @@ const MODE_LABELS: Record<StorageMode, { name: string; blurb: string }> = {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [mode, setMode] = useState<StorageMode>(() => getStorageMode())
+  const [tmdbKey, setTmdbKeyState] = useState(() => getTmdbKey())
   const [busy, setBusy] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -128,6 +131,37 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               import into the other to carry them across.
             </p>
           </div>
+
+          {/* Cover art key — only meaningful without a server to hold it */}
+          {mode !== 'cloud' && (
+            <div className="pt-3 border-t border-border space-y-2">
+              <h4 className="text-xs text-label">COVER ART</h4>
+              <input
+                type="password"
+                value={tmdbKey}
+                onChange={(e) => {
+                  setTmdbKeyState(e.target.value)
+                  setTmdbKey(e.target.value)
+                }}
+                placeholder="TMDB API key (optional)"
+                className="w-full bg-transparent border border-border px-2 py-1 text-xs text-text placeholder:text-dim focus:outline-none focus:border-muted"
+              />
+              <p className="text-xs text-muted leading-relaxed">
+                Without a server there is nowhere to keep a shared key, so movie
+                and TV covers use your own{' '}
+                <a
+                  href="https://www.themoviedb.org/settings/api"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-text"
+                >
+                  TMDB key
+                </a>
+                . It stays on this device. Comic covers need no key; game covers
+                need server mode.
+              </p>
+            </div>
+          )}
 
           {/* Export / import */}
           <div className="pt-3 border-t border-border space-y-2">

@@ -8,8 +8,7 @@ import { SyncIndicator } from './components/SyncIndicator'
 import { AnsiArt } from './components/AnsiArt'
 import { useMediaEntries } from './hooks/useMediaEntries'
 import { promoteMaturedFuturelogEntries } from './lib/storage'
-import { authFetch } from './lib/api'
-import { requiresAuth } from './lib/backend'
+import { requiresAuth, fetchCovers, canFetchCovers } from './lib/backend'
 import { storageKey } from './config'
 import type { MediaEntry, ListType } from './types'
 
@@ -417,9 +416,7 @@ function App() {
     setFetchingCovers(true)
     setCoverFetchEmpty(false)
     try {
-      const res = await authFetch(`/api/cover?title=${encodeURIComponent(entry.title)}&type=${entry.type}`)
-      const data = await res.json()
-      const urls: string[] = data.urls ?? []
+      const urls = await fetchCovers(entry.title, entry.type)
       setCoverOptions(urls)
       if (urls.length === 0) setCoverFetchEmpty(true)
       if (urls.length > 0 && !entry.coverUrl) {
@@ -828,7 +825,13 @@ function App() {
 
             {/* Cover picker strip */}
             {coverFetchEmpty && coverOptions.length === 0 && (
-              <div className="border-t border-border px-3 py-2 text-xs text-dim">no results found</div>
+              <div className="border-t border-border px-3 py-2 text-xs text-dim">
+                {selectedEntry && !canFetchCovers(selectedEntry.type)
+                  ? selectedEntry.type === 'game'
+                    ? 'game covers need server mode'
+                    : 'add a TMDB key in settings to search covers'
+                  : 'no results found'}
+              </div>
             )}
             {coverOptions.length > 0 && (
               <div className="border-t border-border">

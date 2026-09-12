@@ -1,6 +1,7 @@
 import type { MediaEntry, ListType } from '../types'
 import * as cloud from './api'
 import { storageKey, STORAGE_PREFIX } from '../config'
+import { searchCovers, CLIENT_RESOLVABLE, type MediaKind } from '../../shared/covers'
 
 /**
  * Storage backends.
@@ -254,4 +255,83 @@ export async function importAll(bundle: ExportBundle): Promise<{ imported: numbe
   }
 
   return { imported, failed }
+}
+
+// ─── Cover art ───────────────────────────────────────────────────────────────
+
+const TMDB_KEY_KEY = storageKey('tmdb-key')
+
+/**
+ * TMDB key used by the offline modes.
+ *
+ * In cloud mode the server holds the keys and this is unused. Offline there is
+ * no server to hold anything, so the user supplies their own key in Settings
+ * and it stays in this browser or this app.
+ */
+export function getTmdbKey(): string {
+  try {
+    return localStorage.getItem(TMDB_KEY_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+export function setTmdbKey(key: string) {
+  try {
+    const trimmed = key.trim()
+    if (trimmed) localStorage.setItem(TMDB_KEY_KEY, trimmed)
+    else localStorage.removeItem(TMDB_KEY_KEY)
+  } catch {
+    // Storage unavailable — the key simply won't persist.
+  }
+}
+
+/**
+ * Whether cover lookup can work for a media type in the current mode.
+ *
+ * Offline, games need IGDB, which sends no CORS headers and authenticates with
+ * a client secret — so that lookup only exists in cloud mode. Everything else
+ * needs a TMDB key, except comics, which use OpenLibrary and need nothing.
+ */
+export function canFetchCovers(type: MediaKind): boolean {
+  if (getStorageMode() === 'cloud') return true
+  if (!CLIENT_RESOLVABLE.includes(type)) return false
+  if (type === 'comic') return true
+  return getTmdbKey() !== ''
+}
+
+/** Look up cover URLs for a title, using whichever route the mode allows. */
+export async function fetchCovers(title: string, type: MediaKind): Promise<string[]> {
+  if (getStorageMode() === 'cloud') {
+    const res = await cloud.authFetch(
+      `/api/cover?title=${encodeURIComponent(title)}&type=${type}`
+    )
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.urls ?? []
+  }
+
+  if (!canFetchCovers(type)) return []
+  return searchCovers(type, title, { tmdbApiKey: getTmdbKey() })
+}
+
+/**
+ * Turn a cover URL into something the canvas can read pixels from.
+ *
+ * Cloud mode routes through the server's image proxy, which is what makes the
+ * bytes same-origin. Offline there is no proxy — but every host we generate
+ * covers from sends Access-Control-Allow-Origin: *, so the URL can be used
+ * directly as long as the image element is marked crossOrigin.
+ */
+export async function fetchCoverImage(src: string): Promise<Blob | null> {
+  try {
+    const res =
+      getStorageMode() === 'cloud'
+        ? await cloud.authFetch(`/api/cover?proxy=${encodeURIComponent(src)}`)
+        : await fetch(src, { mode: 'cors' })
+    if (!res.ok) return null
+    return await res.blob()
+  } catch {
+    return null
+  }
 }

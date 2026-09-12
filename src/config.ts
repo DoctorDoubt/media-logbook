@@ -28,6 +28,7 @@ const STORAGE_SUFFIXES = [
   'sync-state',
   'browser-entries-backlog',
   'browser-entries-futurelog',
+  'tmdb-key',
   'backlog',
   'futurelog',
   'entries',

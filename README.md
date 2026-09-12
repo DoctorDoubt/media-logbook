@@ -63,6 +63,24 @@ npm run build:frontend
 npm run serve                  # http://localhost:3000
 ```
 
+## Cover art
+
+Covers come from TMDB (movies, TV), IGDB (games) and OpenLibrary (comics). Every provider is
+optional — without its key that media type just returns no covers.
+
+In **server** mode the keys live in `.env` and never reach the browser. Offline there is no server
+to hold a shared key, so what works changes:
+
+| Media | Server mode | Desktop / browser mode |
+|---|---|---|
+| Comics | yes | yes — OpenLibrary needs no key |
+| Movies, TV | yes | yes, with your own TMDB key in Settings |
+| Games | yes | no — see below |
+
+Offline, the app calls TMDB and OpenLibrary directly; both send permissive CORS headers. IGDB
+sends none and authenticates with a client *secret*, which has no safe home in a client app — so
+game covers need server mode. A TMDB key entered in Settings is stored on that device only.
+
 ## Making it yours
 
 Rename the app in one place — `src/config.ts`:

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { authFetch } from '../lib/api'
+import { fetchCoverImage } from '../lib/backend'
 
 // Characters ordered dark → light (suits dark background)
 const ASCII_RAMP = ' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'
@@ -140,10 +140,13 @@ export function AnsiArt({ src, mode = 'ansi', maxWidth = 36, maxHeight = 28, for
 
     img.onerror = () => setLoading(false)
 
-    authFetch(`/api/cover?proxy=${encodeURIComponent(src)}`)
-      .then(res => (res.ok ? res.blob() : Promise.reject(new Error(String(res.status)))))
+    fetchCoverImage(src)
       .then(blob => {
         if (cancelled) return
+        if (!blob) {
+          setLoading(false)
+          return
+        }
         objectUrl = URL.createObjectURL(blob)
         img.src = objectUrl
       })
