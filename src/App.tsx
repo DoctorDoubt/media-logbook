@@ -716,7 +716,7 @@ function App() {
                 <option value="movie">MOVIE</option>
                 <option value="tv">TV SHOW</option>
                 <option value="game">GAME</option>
-                <option value="comic">COMIC</option>
+                <option value="comic">COMICS &amp; BOOKS</option>
               </select>
             </div>
 

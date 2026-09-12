@@ -10,7 +10,7 @@ const mediaTypes: { value: MediaType; label: string; color: string; borderColor:
   { value: 'movie', label: 'MOVIE', color: 'text-movie', borderColor: 'border-movie' },
   { value: 'tv', label: 'TV SHOW', color: 'text-tv', borderColor: 'border-tv' },
   { value: 'game', label: 'GAME', color: 'text-game', borderColor: 'border-game' },
-  { value: 'comic', label: 'COMIC', color: 'text-comic', borderColor: 'border-comic' },
+  { value: 'comic', label: 'COMICS & BOOKS', color: 'text-comic', borderColor: 'border-comic' },
 ]
 
 const statuses: { value: Status; label: string; color: string; borderColor: string; gameOnly?: boolean }[] = [

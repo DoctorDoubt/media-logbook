@@ -1,6 +1,6 @@
 # MediaLog
 
-A media logbook — track movies, TV, games and comics across a **backlog** (what you're working
+A media logbook — track movies, TV, games, comics and books across a **backlog** (what you're working
 through) and a **futurelog** (what isn't out yet). Runs in the browser, as an installable PWA, or
 as a native desktop app.
 
@@ -65,7 +65,7 @@ npm run serve                  # http://localhost:3000
 
 ## Cover art
 
-Covers come from TMDB (movies, TV), IGDB (games) and OpenLibrary (comics). Every provider is
+Covers come from TMDB (movies, TV), IGDB (games) and OpenLibrary (comics and books). Every provider is
 optional — without its key that media type just returns no covers.
 
 In **server** mode the keys live in `.env` and never reach the browser. Offline there is no server
@@ -73,7 +73,7 @@ to hold a shared key, so what works changes:
 
 | Media | Server mode | Desktop / browser mode |
 |---|---|---|
-| Comics | yes | yes — OpenLibrary needs no key |
+| Comics & books | yes | yes — OpenLibrary needs no key |
 | Movies, TV | yes | yes, with your own TMDB key in Settings |
 | Games | yes | no — see below |
 

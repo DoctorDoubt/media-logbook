@@ -33,7 +33,7 @@ const columns: { type: MediaType; label: string; color: string }[] = [
   { type: 'movie', label: 'MOVIES', color: 'text-movie border-movie/30' },
   { type: 'tv', label: 'TV SHOWS', color: 'text-tv border-tv/30' },
   { type: 'game', label: 'GAMES', color: 'text-game border-game/30' },
-  { type: 'comic', label: 'COMICS', color: 'text-comic border-comic/30' },
+  { type: 'comic', label: 'COMICS & BOOKS', color: 'text-comic border-comic/30' },
 ]
 
 const hoverColors: Record<MediaType, string> = {

@@ -9,7 +9,8 @@
  *
  *   TMDB (movies, TV)   Sends Access-Control-Allow-Origin: *, so the webview
  *                       can call it directly with the user's own API key.
- *   OpenLibrary (comics) Same, and needs no key at all.
+ *   OpenLibrary (comics,  Same, and needs no key at all. Its catalogue is books
+ *   books)              first, which is why the category covers both.
  *   IGDB (games)        Sends no CORS headers and authenticates with a client
  *                       secret, which does not belong in a client. Games
  *                       therefore only resolve covers in server mode.
