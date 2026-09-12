@@ -64,7 +64,9 @@ export async function POST(request: Request) {
     values.push(userId) // Add userId for ownership verification
     const query = `UPDATE media_entries SET ${fields.join(', ')} WHERE id = $${values.length - 1} AND user_id = $${values.length} RETURNING *`
 
-    const result = await sql.query(query, values)
+    // Column names are built from a fixed allowlist above; every value is a
+    // numbered placeholder, so this stays parameterised.
+    const result = await sql.unsafe(query, values)
 
     if (result.length === 0) {
       return new Response(JSON.stringify({ error: 'Entry not found' }), {

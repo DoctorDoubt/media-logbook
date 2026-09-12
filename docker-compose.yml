@@ -1,0 +1,67 @@
+# Everything needed to run MediaLog on your own machine or server.
+#
+#   cp .env.example .env      # then edit it — SITE_PASSWORD and the two secrets
+#   docker compose up -d
+#
+# The app is then on http://localhost:3000. See README.md for putting it behind
+# a domain with TLS.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-medialog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-medialog}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-medialog}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Not published by default: only the app container needs to reach it.
+    # Uncomment to inspect the database from your host.
+    # ports:
+    #   - '5432:5432'
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-medialog}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-medialog}
+      SITE_PASSWORD: ${SITE_PASSWORD:?set SITE_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET in .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      # Optional — cover art works without these, it just returns nothing.
+      TMDB_API_KEY: ${TMDB_API_KEY:-}
+      IGDB_CLIENT_ID: ${IGDB_CLIENT_ID:-}
+      IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET:-}
+      PORT: 3000
+    ports:
+      - '${APP_PORT:-3000}:3000'
+
+  # Uncomment for automatic HTTPS on a public server. Set DOMAIN in .env, point
+  # the domain's DNS at this machine, and change the app's ports above to
+  # '127.0.0.1:3000:3000' so only Caddy is reachable from outside.
+  #
+  # caddy:
+  #   image: caddy:2-alpine
+  #   restart: unless-stopped
+  #   depends_on: [app]
+  #   ports:
+  #     - '80:80'
+  #     - '443:443'
+  #   command: caddy reverse-proxy --from ${DOMAIN} --to app:3000
+  #   volumes:
+  #     - caddy-data:/data
+
+volumes:
+  db-data:
+  # caddy-data:
